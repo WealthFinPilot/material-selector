@@ -1,6 +1,6 @@
 # Materials Identifier
 
-A browser-based tool for identifying the probable grade of a metallic alloy from raw optical-emission spectrometry (OES) readings.
+A browser-based tool that matches a client's steel sample against a reference database — and returns the top matching grade candidates, ranked by confidence score.
 
 **[Live app →](https://materials-selector-wealthfinpilot.netlify.app)**
 
@@ -10,9 +10,16 @@ A browser-based tool for identifying the probable grade of a metallic alloy from
 
 ## The problem
 
-In a metallurgical laboratory, an OES spectrometer returns relative intensities for 20+ chemical elements simultaneously. Translating those readings into a probable alloy grade traditionally relied on the technician comparing values by eye against printed reference tables — a method that becomes unreliable as soon as several elements vary at once.
+In the steel industry, thousands of commercial grades exist — each manufacturer produces its own alloy variants with specific chemical compositions, all derived from international standards. When a client submits a steel sample for analysis, the question is always the same: which grade does it match, and do we have something comparable in stock?
 
-The result: subjective identification, non-reproducible across operators, and slow under workload.
+Answering that question manually means comparing a dozen chemical element values against reference tables, one by one — a slow, operator-dependent process prone to inconsistency under workload.
+
+This tool automates that comparison: enter the measured chemical composition, and the engine instantly ranks the closest matching grades from the reference database, with a confidence score for each candidate.
+
+The real value of this solution is twofold:
+
+ - It replaces subjective technician judgment with an objective, quantified, and reproducible decision.
+ - It transfers specialized know-how from individual experts into a process fully owned by the organization.
 
 ## The solution
 
