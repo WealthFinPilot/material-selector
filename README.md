@@ -2,7 +2,7 @@
 
 A browser-based tool for identifying the probable grade of a metallic alloy from raw optical-emission spectrometry (OES) readings.
 
-**[Live app →](https://material-selector.netlify.app)**
+**[Live app →](https://materials-selector-wealthfinpilot.netlify.app)**
 
 ![OES Alloy Identifier interface](assets/screenshot.png)
 
