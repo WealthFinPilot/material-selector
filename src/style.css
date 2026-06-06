@@ -260,6 +260,8 @@ form { padding: var(--s5); }
 .bar > span { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
 
 .foot { padding: var(--s5) 0 var(--s7); color: var(--ink-faint); font-size: 12px; }
+.foot__link { color: var(--ink-muted); text-underline-offset: 3px; }
+.foot__link:hover { color: var(--accent); }
 
 /* ---------- motion ---------- */
 @keyframes rise {
