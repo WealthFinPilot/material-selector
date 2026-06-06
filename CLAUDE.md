@@ -1,121 +1,176 @@
 # CLAUDE.md — material-selector
 
-> Ce fichier est lu par Claude Code à chaque session. Il est la référence unique de contexte pour ce projet.
+## Project identity
+
+Browser-based tool for matching a client's steel sample against a reference database.
+Stack: HTML/CSS/JS vanilla — zero dependencies, zero build step.
+Deployed on Netlify via GitHub CI/CD (publish directory = root).
+Live: https://materials-selector-wealthfinpilot.netlify.app
+Repo: https://github.com/WealthFinPilot/material-selector
 
 ---
 
-## Quel est ce projet ?
+## Current state — V2 in progress
 
-Transformation d'un outil Excel/VBA de sélection de matériaux métallurgiques en application web statique, publique, déployée sur Netlify.
+V1 is stable and deployed. V2 adds:
+1. Database expansion from `V2_projet.xlsx` (sheet `Add`)
+2. Two new requirement datasets from `V2_projet.xlsx` (sheet `Requis`)
+3. A new "Reverse" tab with two features: grade lookup and compliance check
 
-Contexte métier : un laboratoire d'analyse OES (spectrométrie d'émission optique) reçoit des valeurs brutes d'intensités relatives pour 20+ éléments chimiques. L'outil identifie le grade probable de l'alliage en comparant ces valeurs normalisées à une base de données de compositions de référence, via une distance pondérée.
-
-Ce repo est public et orienté portfolio Data Analyst / développement. Ne pas mentionner cet objectif dans le README ou les commits.
-
----
-
-## Sources disponibles — à extraire, ne pas inventer
-
-| Fichier | Contenu attendu |
-|---|---|
-| `OES-Database_R01.xlsm` | Base de données alliages, vecteur de pondération, interface VBA |
-| `*.bas` | Logique algorithmique exportée (normalisation, calcul distances, classement) |
-| `Choix_des_matériaux.pdf` | Description métier et formules mathématiques de référence |
-
-**Règle absolue** : toute valeur numérique (poids, compositions, seuils) doit être extraite des fichiers sources. Aucune valeur inventée ou estimée.
+Do not touch `src/engine.js` or the existing main tab unless a bug is found.
+Run `node test/engine.test.mjs` after any change — 44/44 + 12/12 must pass.
 
 ---
 
-## Algorithme à implémenter (référence : PDF)
-
-```
-1. Normalisation       p_i = x_i / sum(x_k)
-2. Distance pondérée   T_j = sum(w_i * |p_i - s_i_j|)   pour chaque alliage j
-3. Score               Match_j = 1 / (1 + T_j)
-4. Classement          tri décroissant par Match_j
-```
-
-- `x_i` : valeur brute OES saisie par l'utilisateur
-- `s_i_j` : composition de référence de l'alliage j pour l'élément i
-- `w_i` : poids métallurgique de l'élément i (ex. C=500, Mn=400, Cr=150…)
-
----
-
-## Architecture cible du repo
+## File structure
 
 ```
 material-selector/
 ├── index.html
 ├── src/
-│   ├── engine.js       # moteur de calcul pur (normalisation, distance, score)
-│   ├── main.js         # logique UI (lecture formulaire, appel engine, affichage)
-│   └── style.css
+│   ├── engine.js          # Similarity engine — do not modify
+│   ├── main.js            # Main tab UI
+│   └── style.css          # Design system — OKLCH palette, WCAG AA
 ├── data/
-│   ├── alloys.json     # base de données extraite du xlsm
-│   └── weights.json    # vecteur de pondération extrait du xlsm
+│   ├── fe01.json          # 44 carbon steels — composition + weights
+│   ├── fe30.json          # 12 stainless steels — composition + weights
+│   ├── fe01_requis.json   # [V2] compliance requirements for Fe01
+│   └── fe30_requis.json   # [V2] compliance requirements for Fe30
+├── scripts/
+│   └── extract_v2.py      # [V2] extracts Add + Requis from xlsx → JSON
+├── test/
+│   └── engine.test.mjs
 ├── docs/
-│   ├── source-analysis.md   # inventaire extrait des sources (étape 1)
-│   └── architecture.md      # décisions techniques (étape 2)
+│   ├── source-analysis.md
+│   └── architecture.md
 ├── assets/
-│   └── screenshot.png  # capture pour le README
+│   ├── Atome.png
+│   └── Materials-Identifier.jpeg
+├── V2_projet.xlsx          # Source data for V2 — never commit sensitive source files
 ├── .gitignore
-├── netlify.toml        # si configuration non-racine nécessaire
+├── netlify.toml
 ├── README.md
 └── CLAUDE.md
 ```
 
 ---
 
-## Stack technique
+## Data schemas
 
-- **HTML/CSS/JS vanilla** — zéro dépendance serveur, compatible Netlify statique sans configuration de build.
-- **Données statiques JSON** — chargées au démarrage via `fetch()` ou embarquées directement dans un module JS.
-- **Calcul 100% client** — aucun appel API, aucun backend.
+### fe01.json / fe30.json (updated in V2)
 
-Justification : l'outil source est autonome (Excel offline). L'application web doit l'être aussi. Simplicité de déploiement, lisibilité du code pour un recruteur technique.
+```json
+{
+  "weights": { "C": 500, "Mn": 400, "Cr": 150, "..." : 0 },
+  "alloys": [
+    {
+      "designation": "AISI 1008",
+      "norm": "AISI",
+      "grade": "1008",
+      "shape": ["Bars", "Pipe"],
+      "type": "Nonresulfurized Carbon Steel",
+      "composition": { "C": 0.10, "Mn": 0.40, "..." : 0 }
+    }
+  ]
+}
+```
+
+`shape` and `type` are new in V2. Backfill `"shape": []` and `"type": ""` on all V1 entries.
+
+### fe01_requis.json / fe30_requis.json (new in V2)
+
+```json
+[
+  {
+    "designation": "AISI 1008",
+    "norm": "AISI",
+    "grade": "1008",
+    "shape": ["Bars"],
+    "type": "Nonresulfurized Carbon Steel",
+    "nb_requis": 3,
+    "requirements": {
+      "C": "0.10",
+      "Mn": "0.30-0.50",
+      "Si": "",
+      "P": "0.040"
+    }
+  }
+]
+```
+
+Requirement cell values are stored as raw strings. Parsing is done at runtime
+(`parseRequirement` in `src/compliance.js`).
+- Empty string → no constraint
+- `"0.10"` → max constraint (parseFloat)
+- `"0.30–0.50"` → range constraint. **Separator is an EN DASH (U+2013)** in the
+  source, not a hyphen; the parser accepts both. Index 0 = min, index 1 = max.
+- `"0.15 min"` → min constraint · `"0.13 max"` → max constraint
 
 ---
 
-## Design UI
+## V1 similarity algorithm (engine.js — do not modify)
 
-Lire `/mnt/skills/public/frontend-design/SKILL.md` avant de coder l'interface.
+```
+sim(x, s) = min(x, s) / max(x, s)   ∈ [0, 1]
+score(input, alloy) = Σ(w_i · sim_i) / Σw_i
+```
 
-Directives spécifiques :
-- Ton visuel : industriel/technique, pas générique. L'application s'adresse à des techniciens de laboratoire.
-- Formulaire de saisie : un champ par élément chimique, organisé en grille lisible.
-- Résultats : affichage des N meilleurs candidats, score visible, grade mis en avant.
-- Aucune couleur ou typographie par défaut (Inter, Arial, purple gradient = interdit).
-
----
-
-## Règles de travail
-
-**Commits** : messages en anglais, format `type: description` (feat, fix, refactor, docs, chore). Un commit par étape logique, pas de commits fourre-tout.
-
-**Données** : ne commiter ni le `.xlsm`, ni les `.bas` dans le repo public sauf décision explicite de Sébastien. Les données extraites en JSON sont publiques.
-
-**Anonymisation** : aucune référence au nom du laboratoire, à l'employeur, ou à des données clients dans le code ou les fichiers.
-
-**Validation** : avant de passer à l'étape suivante, exécuter le point de validation défini dans `plan-execution-material-selector.md`.
-
-**README** : rédigé en anglais. Ton : projet réel résolvant un problème réel. Pas de "portfolio project", pas de "this demonstrates my skills in X". Décrire le problème, la solution, et le lien vers l'app.
+Input = client values in % (same scale as database). No normalization.
 
 ---
 
-## Points de vigilance
+## V2 compliance algorithm (implemented in `src/compliance.js`)
 
-- La normalisation s'applique sur les valeurs brutes OES (intensités relatives), pas des pourcentages. Vérifier la cohérence avec les valeurs de référence du xlsm.
-- Le vecteur de poids est le résultat d'itérations expérimentales décrites dans le PDF. L'extraire tel quel, ne pas le recalculer.
-- Certains éléments peuvent avoir des valeurs nulles ou absentes pour certains alliages — gérer ce cas dans `engine.js` (contribution nulle ou neutre).
-- Le score `Match_j` est borné [0, 1]. Si tous les scores sont faibles, afficher un avertissement explicite à l'utilisateur.
+**Weighted boolean conformity.** Compliance is boolean per constraint: a value
+either meets the spec or it does not. The original bonus/penalty model (empty →
+`+0.5·w`, failures penalised by the value `max·w`) was rejected — it rewarded
+data-entry volume, mixed dimensions (value-scaled penalties), let `%match` exceed
+100 %, and produced a verdict that contradicted the displayed score. See the
+session decision and `[[algo-decision-vba-ratio]]` rationale.
+
+For each grade G, over every element `e` that carries a requirement (weight `w_e`):
+
+```
+pass_e  = 1 if the client value satisfies the constraint, else 0
+          (a missing client value counts as 0 — not validated)
+validated = Σ pass_e
+verdict   = PASS  iff  validated === G.nb_requis     (every applicable constraint met)
+            FAIL  otherwise
+match     = Σ(w_e · pass_e) / Σ(w_e)      over applicable constraints   ∈ [0, 1]
+```
+
+A range counts as 1 requirement (not 2). `nb_requis` equals the number of
+non-empty requirement cells (verified across all 330 grades).
+
+Why weighting: a grade that only misses a trace element (Pb, `w=10`) ranks above
+one that misses C (`w=500`). `match` is naturally bounded in `[0, 1]` — no cap.
+
+**Display — top 10:**
+- Keep PASS grades always; keep FAIL grades only if `match > 0`
+- Sort: PASS before FAIL, then by `match` desc, then by `nb_requis` desc (tighter
+  spec wins ties — all PASS grades share `match === 1`)
 
 ---
 
-## Ressources
+## Constraints — never violate
 
-| Ressource | Rôle |
-|---|---|
-| `plan-execution-material-selector.md` | Plan séquentiel complet avec validations |
-| `Choix_des_matériaux.pdf` | Référence métier et formules |
-| `OES-Database_R01.xlsm` | Source des données et de la logique |
-| `/mnt/skills/public/frontend-design/SKILL.md` | Directives design UI |
+- Zero new dependencies. No npm, no CDN additions.
+- Do not modify `src/engine.js`.
+- New tab must use the same CSS variables as the existing design system.
+- `scripts/extract_v2.py` is the only entry point for xlsx → JSON extraction.
+- Never commit: `*.xlsm`, `*.pdf`, source databases, client data.
+- All composition values must come from the source xlsx — never invent values.
+
+---
+
+## Execution order for V2
+
+1. `python3 scripts/extract_v2.py` → verify JSON outputs before any UI work
+2. Update `fe01.json` + `fe30.json` (backfill shape/type on existing entries)
+3. Build Reverse tab — Section A (grade lookup) first
+4. Build Reverse tab — Section B (compliance check)
+5. Manual test: run compliance check on at least 2 known grades, verify PASS/FAIL logic
+6. `node test/engine.test.mjs` (identity 203/203 + 183/183 after expansion — co-top
+   ties allowed for chemically indistinguishable grades) and
+   `node test/compliance.test.mjs` (compliance engine)
+7. Commit with logical messages, update README if needed
