@@ -2,7 +2,7 @@
 
 A browser-based tool that matches a client's steel sample against a reference database — and returns the top matching grade candidates, ranked by confidence score.
 
-🔗  **Démo en ligne** : **[Materials-explorer-live-application](https://materials-selector-wealthfinpilot.netlify.app)** 👆
+🔗  **Démo en ligne** : **[Materials-explorer.netlify.app](https://materials-selector-wealthfinpilot.netlify.app)** 👆
 
 ![Materials Identifier interface](assets/Materials-Identifier.jpeg)
 
