@@ -3,7 +3,7 @@
 ![Status](https://img.shields.io/badge/status-in%20active%20use-brightgreen)
 ![ISO/IEC 17025](https://img.shields.io/badge/ISO%2FIEC-17025-0A66C2)
 
-A browser-based tool that matches a client's steel sample against a reference database — and returns the top matching grade candidates, ranked by confidence score.
+A browser-based tool that identifies the closest matching steel grades from a client's chemical composition — and verifies whether that composition meets a target grade's requirements.
 
 🔗  **Démo en ligne** : **[Materials-explorer.netlify.app](https://materials-selector-wealthfinpilot.netlify.app)** 👆
 
@@ -19,11 +19,15 @@ Answering that question manually means comparing a dozen chemical element values
 
 This tool automates that comparison: enter the measured chemical composition, and the engine instantly ranks the closest matching grades from the reference database, with a confidence score for each candidate.
 
+The second challenge is conformance: does this material actually meet the requirements of a target grade? Each grade specification defines accepted ranges and maximum thresholds for key elements. A single out-of-spec value can disqualify an otherwise close match — but finding it requires cross-checking every element against every constraint, by hand, for every candidate grade. Under time pressure, that process breaks down.
+
 The real value of this solution is twofold:
 
- - It replaces subjective technician judgment with an objective, quantified, and reproducible decision.
- - It transfers specialized know-how from individual experts into a process fully owned by the organization.
+- It replaces subjective technician judgment with an objective, quantified, and reproducible decision.
+- It transfers specialized know-how from individual experts into a process fully owned by the organization.
+- It provides instant, element-level transparency — showing exactly which values conform and which do not, for every candidate grade simultaneously.
 
+  
 ## The solution
 
 The tool compares a measured composition against a reference database of known alloys using a weighted chemical-similarity metric. Each element is assigned a metallurgical weight that reflects its discriminating power (carbon and manganese matter more than trace elements in carbon steels; chromium and nickel dominate in stainless). For each reference alloy, the tool computes:
